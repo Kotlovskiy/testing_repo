@@ -1,4 +1,4 @@
-const { createDefaultPreset } = require("ts-jest");
+import { createDefaultPreset } from 'ts-jest';
 
 const tsJestTransformCfg = createDefaultPreset().transform;
 
@@ -8,4 +8,16 @@ export default {
   transform: {
     ...tsJestTransformCfg,
   },
+  testMatch: [
+    "**/tests/**/*.test.ts",
+    "**/__tests__/**/*.test.ts"
+  ],
+  moduleFileExtensions: ["ts", "js", "json"],
+  clearMocks: true,
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/**/*.d.ts"
+  ]
 };
