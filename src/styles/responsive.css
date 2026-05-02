@@ -1,0 +1,204 @@
+/* Tablet */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 1rem;
+    }
+
+    .app-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .app-main {
+        padding: 1rem;
+    }
+
+    .list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .products-grid,
+    .dishes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .flags-filter {
+        flex-wrap: wrap;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .nutrition-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-large {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .add-composition {
+        flex-direction: column;
+    }
+
+    .dish-view-photos {
+        justify-content: center;
+    }
+
+    .dish-photo {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+    }
+
+    .nutrition-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .app-nav {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .nav-btn {
+        text-align: left;
+        border-radius: 8px;
+    }
+
+    .nav-btn.active {
+        border-radius: 8px;
+    }
+
+    .filters-panel {
+        padding: 1rem;
+    }
+
+    .product-card-header,
+    .dish-card-header,
+    .product-card-body,
+    .dish-card-body {
+        padding: 1rem;
+    }
+
+    .product-nutrition,
+    .dish-nutrition {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+
+    .nutrition-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nutrition-card {
+        padding: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    .dish-view-actions {
+        flex-direction: column;
+    }
+
+    .composition-item {
+        flex-wrap: wrap;
+    }
+
+    .composition-quantity {
+        margin-left: auto;
+    }
+}
+
+/* Touch devices */
+@media (hover: none) {
+    .btn-icon:hover {
+        background: transparent;
+    }
+
+    .product-card:hover,
+    .dish-card:hover {
+        transform: none;
+        box-shadow: var(--card-shadow);
+    }
+
+    .nav-btn:hover {
+        background: transparent;
+    }
+}
+
+/* High contrast / accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .app-header,
+    .app-nav,
+    .filters-panel,
+    .btn,
+    .product-card-footer,
+    .dish-card-footer,
+    .dish-view-actions,
+    .modal {
+        display: none !important;
+    }
+
+    .product-card,
+    .dish-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .dish-view-section {
+        break-inside: avoid;
+    }
+}
