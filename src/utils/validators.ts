@@ -37,7 +37,11 @@ export class Validators {
     static calculateNutrition(nutritions: NutritionInput[]): NutritionResult {
         let nutritionResult: NutritionResult = {calories: 0, proteins: 0, fats: 0, carbohydrates: 0}
         nutritions.forEach (nutrition => {
-            if(nutrition.quantityGrams > 0) {
+            if(nutrition.quantityGrams > 0 &&
+            nutrition.productNutrition.caloriesPer100g >= 0 &&
+            nutrition.productNutrition.proteinsPer100g >= 0 &&
+            nutrition.productNutrition.fatsPer100g >= 0 &&
+            nutrition.productNutrition.carbohydratesPer100g >= 0) {
                 const factor = nutrition.quantityGrams / 100;
                 nutritionResult.calories += (nutrition.productNutrition.caloriesPer100g * factor)
                 nutritionResult.proteins += (nutrition.productNutrition.proteinsPer100g * factor)
