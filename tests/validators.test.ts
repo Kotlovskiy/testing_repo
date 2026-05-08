@@ -55,9 +55,11 @@ describe('Validators.calculateNutrition', () => {
             });
         });
 
-        test('EC4: должен игнорировать продукты с quantityGrams <= 0', () => {
+        test('EC4: должен игнорировать невалидные продукты', () => {
             const input = [
-                createNutritionInput(0),
+                createNutritionInput(100, {
+                    proteinsPer100g: -1,
+                }),
                 createNutritionInput(-10),
                 createNutritionInput(100),
             ];
@@ -68,23 +70,6 @@ describe('Validators.calculateNutrition', () => {
                 proteins: 10,
                 fats: 5,
                 carbohydrates: 30,
-            });
-        });
-
-        test('EC5: должен игнорировать продукты с отрицательными значениями питательности', () => {
-            const validProduct = createNutritionInput(50);
-            const invalidProduct = createNutritionInput(100, {
-                proteinsPer100g: -1,
-            });
-
-            const result = Validators.calculateNutrition([invalidProduct, validProduct]);
-            const factor = 50 / 100;
-
-            expect(result).toEqual<NutritionResult>({
-                calories: 200 * factor,
-                proteins: 10 * factor,
-                fats: 5 * factor,
-                carbohydrates: 30 * factor,
             });
         });
     });
@@ -101,19 +86,8 @@ describe('Validators.calculateNutrition', () => {
             });
         });
 
-        test('BVA2: должен корректно рассчитывать для минимального положительного целого числа', () => {
-            const result = Validators.calculateNutrition([createNutritionInput(1)]);
-            const factor = 1 / 100;
-
-            expect(result.calories).toBeCloseTo(200 * factor);
-            expect(result.proteins).toBeCloseTo(10 * factor);
-            expect(result.fats).toBeCloseTo(5 * factor);
-            expect(result.carbohydrates).toBeCloseTo(30 * factor);
-        });
-
-
-        test('BVA3: должен игнорировать продукт при quantityGrams = -1', () => {
-            const result = Validators.calculateNutrition([createNutritionInput(-1)]);
+        test('BVA2: должен игнорировать продукт при quantityGrams = -0.001', () => {
+            const result = Validators.calculateNutrition([createNutritionInput(-0.001)]);
             expect(result).toEqual<NutritionResult>({
                 calories: 0,
                 proteins: 0,
@@ -122,7 +96,7 @@ describe('Validators.calculateNutrition', () => {
             });
         });
 
-        test('BVA4: должен корректно обрабатывать маленькое положительное дробное количество (0.001 г)', () => {
+        test('BVA3: должен корректно обрабатывать минимальное положительное количество (0.001 г)', () => {
             const result = Validators.calculateNutrition([createNutritionInput(0.001)]);
             const factor = 0.001 / 100;
 
@@ -132,15 +106,128 @@ describe('Validators.calculateNutrition', () => {
             expect(result.carbohydrates).toBeCloseTo(30 * factor);
         });
 
-        test('BVA5: должен корректно рассчитывать для большого количества', () => {
-            const huge = 1_000_000;
-            const result = Validators.calculateNutrition([createNutritionInput(huge)]);
-            const factor = huge / 100;
+        describe.each([
+            { field: 'caloriesPer100g' },
+            { field: 'proteinsPer100g' },
+            { field: 'fatsPer100g' },
+            { field: 'carbohydratesPer100g' },
+        ])('Параметризованный тест для отрицательной питательности', ({ field }) => {
+            const validProduct = () => createNutritionInput(50);
 
-            expect(result.calories).toBeCloseTo(200 * factor);
-            expect(result.proteins).toBeCloseTo(10 * factor);
-            expect(result.fats).toBeCloseTo(5 * factor);
-            expect(result.carbohydrates).toBeCloseTo(30 * factor);
+            test(`BVA4: должен игнорировать продукт с ${field} = -0.001`, () => {
+                const invalid = createNutritionInput(100, { [field]: -0.001 });
+                const result = Validators.calculateNutrition([invalid, validProduct()]);
+                const factor = 50 / 100;
+
+                expect(result.calories).toBeCloseTo(200 * factor);
+                expect(result.proteins).toBeCloseTo(10 * factor);
+                expect(result.fats).toBeCloseTo(5 * factor);
+                expect(result.carbohydrates).toBeCloseTo(30 * factor);
+            });
+        })
+
+        test('BVA5: должен корректно обрабатывать продукт с caloriesPer100g = 0', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { caloriesPer100g: 0 }),
+                createNutritionInput(50),
+            ]);
+            const factor = 50 / 100;
+
+            expect(result).toEqual<NutritionResult>({
+                calories: 0 + 200 * factor,
+                proteins: 10 + 10 * factor,
+                fats: 5 + 5 * factor,
+                carbohydrates: 30 + 30 * factor,
+            });
+        });
+
+        test('BVA6: должен корректно обрабатывать caloriesPer100g = 0.001', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { caloriesPer100g: 0.001 }),
+            ]);
+
+            expect(result.calories).toBeCloseTo(0.001);
+            expect(result.proteins).toBeCloseTo(10);
+            expect(result.fats).toBeCloseTo(5);
+            expect(result.carbohydrates).toBeCloseTo(30);
+        });
+        
+        test('BVA7: должен корректно обрабатывать продукт с proteinsPer100g = 0', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { proteinsPer100g: 0 }),
+                createNutritionInput(50),
+            ]);
+            const factor = 50 / 100;
+
+            expect(result).toEqual<NutritionResult>({
+                calories: 200 + 200 * factor,
+                proteins: 0 + 10 * factor,
+                fats: 5 + 5 * factor,
+                carbohydrates: 30 + 30 * factor,
+            });
+        });
+
+        test('BVA8: должен корректно обрабатывать proteinsPer100g = 0.001', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { proteinsPer100g: 0.001 }),
+            ]);
+
+            expect(result.calories).toBeCloseTo(200);
+            expect(result.proteins).toBeCloseTo(0.001);
+            expect(result.fats).toBeCloseTo(5);
+            expect(result.carbohydrates).toBeCloseTo(30);
+        });
+
+        test('BVA9: должен корректно обрабатывать продукт с fatsPer100g = 0', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { fatsPer100g: 0 }),
+                createNutritionInput(50),
+            ]);
+            const factor = 50 / 100;
+
+            expect(result).toEqual<NutritionResult>({
+                calories: 200 + 200 * factor,
+                proteins: 10 + 10 * factor,
+                fats: 0 + 5 * factor,
+                carbohydrates: 30 + 30 * factor,
+            });
+        });
+
+        test('BVA10: должен корректно обрабатывать fatsPer100g = 0.001', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { fatsPer100g: 0.001 }),
+            ]);
+
+            expect(result.calories).toBeCloseTo(200);
+            expect(result.proteins).toBeCloseTo(10);
+            expect(result.fats).toBeCloseTo(0.001);
+            expect(result.carbohydrates).toBeCloseTo(30);
+        });
+
+        test('BVA11: должен корректно обрабатывать продукт с carbohydratesPer100g = 0', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { carbohydratesPer100g: 0 }),
+                createNutritionInput(50),
+            ]);
+            const factor = 50 / 100;
+
+            expect(result).toEqual<NutritionResult>({
+                calories: 200 + 200 * factor,
+                proteins: 10 + 10 * factor,
+                fats: 5 + 5 * factor,
+                carbohydrates: 0 + 30 * factor,
+            });
+        });
+
+        test('BVA12: должен корректно обрабатывать carbohydratesPer100g = 0.001', () => {
+            const result = Validators.calculateNutrition([
+                createNutritionInput(100, { carbohydratesPer100g: 0.001 }),
+            ]);
+
+            expect(result.calories).toBeCloseTo(200);
+            expect(result.proteins).toBeCloseTo(10);
+            expect(result.fats).toBeCloseTo(5);
+            expect(result.carbohydrates).toBeCloseTo(0.001);
         });
     });
 
