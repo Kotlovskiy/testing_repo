@@ -1,0 +1,17 @@
+{
+  "name": "recipe-book-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Recipe Book application",
+  "type": "module",
+  "scripts": {
+    "build": "tsc build",
+    "test": "jest --verbose",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.9.3"
+  }
+}
