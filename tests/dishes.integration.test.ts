@@ -151,7 +151,7 @@ describe('Dishes API Integration Tests', () => {
         expect(dish.flags).toContain(flag);
       });
 
-      it.each(Object.values(Flags))('должен запретить флаг %s, если есть не-%s продукт', async (flag) => {
+      it.each(Object.values(Flags))('должен запретить флаг %s, если есть продукт без этого флага', async (flag) => {
         const prodId = await createTestProduct({ flags: [] });
         createdProductIds.push(prodId);
         const dto: CreateUpdateDishDto = {
@@ -222,12 +222,12 @@ describe('Dishes API Integration Tests', () => {
       }
     });
 
-    it.each(Object.values(DishCategory))('должен фильтровать по категории $s', async (category) => {
+    it.each(Object.values(DishCategory))('должен фильтровать по категории %s', async (category) => {
       const dishes = await dishService.getAll({ category });
       expect(dishes.every(d => d.category === category)).toBe(true);
     });
 
-    it.each(Object.values(Flags))('должен фильтровать по флагу $s', async (flag) => {
+    it.each(Object.values(Flags))('должен фильтровать по флагу %s', async (flag) => {
       const dishes = await dishService.getAll({ flags: [flag] });
       expect(dishes.every(d => d.flags.includes(flag))).toBe(true);
     });
@@ -239,7 +239,7 @@ describe('Dishes API Integration Tests', () => {
   });
 
   describe('PUT /api/dishes/:id - Редактирование блюда', () => {
-    it.each(Object.values(Flags))('при изменении состава флаги должны пересчитываться: $s должен сняться', async (flag) => {
+    it.each(Object.values(Flags))('при изменении состава флаги должны пересчитываться: %s должен сняться', async (flag) => {
       const Prod = await createTestProduct({ flags: [flag] });
       createdProductIds.push(Prod);
       const dishDto: CreateUpdateDishDto = {
