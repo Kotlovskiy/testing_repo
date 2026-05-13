@@ -1,0 +1,20 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+node_modules/
+dist/
+playwright-report/
+test-results/
+.env
+*.log
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
