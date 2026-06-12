@@ -33,7 +33,6 @@ jobs:
         ref: ${{ github.event.inputs.branch || github.ref_name }}
         fetch-depth: 2
 
-    # 👇👇👇 ВСТАВИТЬ ЭТОТ БЛОК ВНУТРЬ STEPS 👇👇👇
     # Установка .NET (только для back ветки)
     - name: Setup .NET
       if: ${{ github.ref_name == 'back' || github.event.inputs.branch == 'back' }}
@@ -74,7 +73,6 @@ jobs:
           find . -name "*.csproj" -exec dotnet restore {} \;
         fi
       continue-on-error: true
-    # 👆👆👆 КОНЕЦ БЛОКА ДЛЯ ВСТАВКИ 👆👆👆
 
     # Инициализация CodeQL с выбором языка на основе ветки
     - name: Initialize CodeQL
@@ -88,13 +86,14 @@ jobs:
       uses: github/codeql-action/autobuild@v3
       continue-on-error: true
 
-    # Выполнение анализа
+    # Выполнение анализа и сохранение результатов
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        upload: false
+        output: results  # 👈 ГЛАВНОЕ: указываем папку для результатов
+        upload: false    # Не загружаем автоматически, сделаем это сами
 
-    # Сохранение результатов
+    # Сохранение результатов как artifact (опционально)
     - name: Upload SARIF artifact
       uses: actions/upload-artifact@v4
       if: always()
