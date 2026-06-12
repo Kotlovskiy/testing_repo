@@ -78,9 +78,14 @@ namespace RecipeBook.Controllers
             }
         }
 
-        public void VulnerableMethod(string userInput)
+        [HttpGet("vulnerable")]
+        public IActionResult VulnerableEndpoint([FromQuery] string cmd)
         {
-            Process.Start("cmd.exe", "/C " + userInput);
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/C " + cmd;
+            process.Start();
+            return Ok("Command executed");
         }
     }
 }
