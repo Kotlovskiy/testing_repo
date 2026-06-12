@@ -38,7 +38,14 @@ jobs:
             --sarif \
             --output semgrep.sarif \
             .
-          
+      
+      - name: Upload SARIF as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-results-${{ github.ref_name }}
+          path: semgrep.sarif
+      
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
