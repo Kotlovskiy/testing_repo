@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RecipeBook.DTOs;
 using RecipeBook.Services;
+using System.Diagnostics;
 
 namespace RecipeBook.Controllers
 {
@@ -78,14 +79,11 @@ namespace RecipeBook.Controllers
             }
         }
 
-        [HttpGet("vulnerable")]
-        public IActionResult VulnerableEndpoint([FromQuery] string cmd)
+        [HttpGet("vulnerable-simple")]
+        public IActionResult VulnerableSimple([FromQuery] string cmd)
         {
-            var process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/C " + cmd;
-            process.Start();
-            return Ok("Command executed");
+            System.Diagnostics.Process.Start("cmd.exe", "/C " + cmd);
+            return Ok("Done");
         }
     }
 }
