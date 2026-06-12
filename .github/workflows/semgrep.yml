@@ -2,6 +2,16 @@ name: Semgrep SAST
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to scan'
+        required: true
+        default: 'front'
+        type: choice
+        options:
+          - front
+          - back
+          - ci-cd
   pull_request: {}
   push:
     branches: ["front", "back"]
@@ -15,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
       
       - name: Install Semgrep
         run: pip install semgrep
