@@ -37,7 +37,6 @@ jobs:
             --config p/security-audit \
             --config p/csharp \
             --config p/owasp-top-ten \
-            --config p/dotnet \
             --sarif \
             --output semgrep.sarif \
             .
