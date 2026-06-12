@@ -1,6 +1,7 @@
 name: Semgrep SAST
 
 on:
+  workflow_dispatch:
   pull_request: {}
   push:
     branches: ["front", "back"]
