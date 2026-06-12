@@ -6,7 +6,7 @@ on:
       branch:
         description: 'Branch to scan'
         required: true
-        default: 'front'
+        default: 'back'
         type: choice
         options:
           - front
@@ -35,6 +35,9 @@ jobs:
         run: |
           semgrep scan \
             --config p/security-audit \
+            --config p/csharp \
+            --config p/owasp-top-ten \
+            --config p/dotnet \
             --sarif \
             --output semgrep.sarif \
             .
@@ -45,7 +48,7 @@ jobs:
         with:
           name: semgrep-results-${{ github.ref_name }}
           path: semgrep.sarif
-      
+          
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
