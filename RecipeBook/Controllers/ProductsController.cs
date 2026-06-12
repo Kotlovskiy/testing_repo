@@ -77,5 +77,10 @@ namespace RecipeBook.Controllers
                 return Conflict(new { error = ex.Message });
             }
         }
+
+        public void VulnerableMethod(string userInput)
+        {
+            Process.Start("cmd.exe", "/C " + userInput);
+        }
     }
 }
