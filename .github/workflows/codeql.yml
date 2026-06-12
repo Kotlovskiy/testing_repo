@@ -11,7 +11,6 @@ on:
         options:
           - front
           - back
-          - ci-cd
   pull_request:
     branches: ["front", "back"]
   push:
@@ -34,54 +33,65 @@ jobs:
         ref: ${{ github.event.inputs.branch || github.ref_name }}
         fetch-depth: 2
 
-    # Установка .NET (если папка back существует)
+    # 👇👇👇 ВСТАВИТЬ ЭТОТ БЛОК ВНУТРЬ STEPS 👇👇👇
+    # Установка .NET (только для back ветки)
     - name: Setup .NET
-      if: ${{ hashFiles('**/*.csproj', '**/*.sln') != '' }}
+      if: ${{ github.ref_name == 'back' || github.event.inputs.branch == 'back' }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           6.0.x
           8.0.x
 
-    # Установка Node.js (если папка front существует)
+    # Установка Node.js (только для front ветки)
     - name: Setup Node.js
-      if: ${{ hashFiles('**/package.json') != '' }}
+      if: ${{ github.ref_name == 'front' || github.event.inputs.branch == 'front' }}
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
 
-    # Установка зависимостей для TypeScript
-    - name: Install dependencies
-      if: ${{ hashFiles('**/package.json') != '' }}
+    # Установка зависимостей для frontend (только для front ветки)
+    - name: Install frontend dependencies
+      if: ${{ github.ref_name == 'front' || github.event.inputs.branch == 'front' }}
       run: |
-        cd front  # или куда у вас установлен package.json
-        npm ci
+        if [ -f "package.json" ]; then
+          npm ci
+        elif [ -f "front/package.json" ]; then
+          cd front && npm ci
+        fi
       continue-on-error: true
 
-    # Восстановление .NET зависимостей
+    # Восстановление зависимостей для backend (только для back ветки)
     - name: Restore .NET dependencies
-      if: ${{ hashFiles('**/*.csproj', '**/*.sln') != '' }}
+      if: ${{ github.ref_name == 'back' || github.event.inputs.branch == 'back' }}
       run: |
-        dotnet restore
+        if [ -f "*.sln" ]; then
+          dotnet restore
+        elif [ -f "back/*.sln" ]; then
+          cd back && dotnet restore
+        else
+          find . -name "*.csproj" -exec dotnet restore {} \;
+        fi
       continue-on-error: true
+    # 👆👆👆 КОНЕЦ БЛОКА ДЛЯ ВСТАВКИ 👆👆👆
 
-    # 👇👇👇 ЗДЕСЬ ВСТАВИТЬ ИНИЦИАЛИЗАЦИЮ CodeQL 👇👇👇
+    # Инициализация CodeQL с выбором языка на основе ветки
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: javascript-typescript, csharp
+        languages: ${{ (github.ref_name == 'front' && 'javascript-typescript') || (github.ref_name == 'back' && 'csharp') || 'javascript-typescript' }}
         queries: security-extended
 
-    # Авто-билд (CodeQL сам найдет что собирать)
+    # Авто-билд
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
+      continue-on-error: true
 
     # Выполнение анализа
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        category: "/language:javascript-typescript,csharp"
         upload: false
 
     # Сохранение результатов
