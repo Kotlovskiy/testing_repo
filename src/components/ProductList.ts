@@ -1,6 +1,7 @@
 import { Product, ProductFilters } from '../types';
 import { Formatters } from '../utils/formatters';
 import { SORT_OPTIONS } from '../utils/constants';
+import { domManipulator } from '../utils/domUtils';
 
 export interface ProductListCallbacks {
     onEdit: (product: Product) => void;
@@ -19,6 +20,8 @@ export class ProductList {
     constructor(container: HTMLElement, callbacks: ProductListCallbacks) {
         this.container = container;
         this.callbacks = callbacks;
+
+        domManipulator.writeUserContent('<div>Initializing ProductList</div>');
     }
 
     render(products: Product[]): void {
