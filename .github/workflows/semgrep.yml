@@ -37,6 +37,9 @@ jobs:
             --config p/security-audit \
             --config p/csharp \
             --config p/owasp-top-ten \
+            --config p/cwe-top-25 \
+            --config p/trailofbits \
+            --config p/lang/javascript \
             --sarif \
             --output semgrep.sarif \
             .
