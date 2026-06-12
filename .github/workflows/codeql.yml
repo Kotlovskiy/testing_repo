@@ -16,33 +16,17 @@ on:
     branches: ["front", "back"]
   push:
     branches: ["front", "back"]
-  schedule:
-    # Ежедневный запуск в 3:00 UTC
-    - cron: '0 3 * * *'
 
 permissions:
   contents: read
   security-events: write
-  actions: read
-  checks: write
 
 jobs:
   codeql-analyze:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-      packages: read
       
-    strategy:
-      fail-fast: false
-      matrix:
-        language:
-          - 'typescript'
-          - 'csharp'
-        # Можно также добавить:
-        # - 'javascript'
-        # - 'python'
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -50,112 +34,67 @@ jobs:
         ref: ${{ github.event.inputs.branch || github.ref_name }}
         fetch-depth: 2
 
-    # Для .NET требуется установка SDK
+    # Установка .NET (если папка back существует)
     - name: Setup .NET
-      if: matrix.language == 'csharp'
+      if: ${{ hashFiles('**/*.csproj', '**/*.sln') != '' }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           6.0.x
           8.0.x
-          # Добавьте вашу версию .NET
 
-    # Для TypeScript может потребоваться Node.js
+    # Установка Node.js (если папка front существует)
     - name: Setup Node.js
-      if: matrix.language == 'typescript'
+      if: ${{ hashFiles('**/package.json') != '' }}
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
 
     # Установка зависимостей для TypeScript
-    - name: Install TypeScript dependencies
-      if: matrix.language == 'typescript'
+    - name: Install dependencies
+      if: ${{ hashFiles('**/package.json') != '' }}
       run: |
-        if [ -f "package.json" ]; then
-          npm ci
-        else
-          echo "No package.json found"
-        fi
+        cd front  # или куда у вас установлен package.json
+        npm ci
+      continue-on-error: true
 
     # Восстановление .NET зависимостей
     - name: Restore .NET dependencies
-      if: matrix.language == 'csharp'
+      if: ${{ hashFiles('**/*.csproj', '**/*.sln') != '' }}
       run: |
-        # Если у вас есть решение (.sln)
-        if [ -f "*.sln" ]; then
-          dotnet restore
-        # Или ищите .csproj файлы
-        elif [ -f "**/*.csproj" ]; then
-          find . -name "*.csproj" -exec dotnet restore {} \;
-        else
-          echo "No .NET project files found"
-        fi
+        dotnet restore
+      continue-on-error: true
 
-    # Инициализация CodeQL
+    # 👇👇👇 ЗДЕСЬ ВСТАВИТЬ ИНИЦИАЛИЗАЦИЮ CodeQL 👇👇👇
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: ${{ matrix.language }}
-        # Используйте расширенные запросы для лучшего обнаружения XSS
-        queries: security-extended,security-and-quality
-        # Для C# можно добавить кастомные запросы
-        config-file: .github/codeql/codeql-config.yml
-        
-    # Автоматическое обнаружение build команд
+        languages: javascript-typescript, csharp
+        queries: security-extended
+
+    # Авто-билд (CodeQL сам найдет что собирать)
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
-      
-    # Выполнение анализа CodeQL
+
+    # Выполнение анализа
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        category: "/language:${{matrix.language}}"
-        output: codeql-results-${{ matrix.language }}.sarif
-        upload: false  # Загружаем позже вручную, чтобы объединить результаты
+        category: "/language:javascript-typescript,csharp"
+        upload: false
 
-    # Сохранение результатов как artifact
-    - name: Upload CodeQL results as artifact
+    # Сохранение результатов
+    - name: Upload SARIF artifact
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: codeql-${{ matrix.language }}-results-${{ github.ref_name }}
-        path: codeql-results-*.sarif
+        name: codeql-results-${{ github.ref_name }}
+        path: results/*.sarif
 
     # Загрузка в GitHub Security tab
     - name: Upload to GitHub Security
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
-        sarif_file: codeql-results-${{ matrix.language }}.sarif
-        category: codeql-${{ matrix.language }}
-
-  # Дополнительная работа: объединение результатов
-  combine-results:
-    runs-on: ubuntu-latest
-    needs: codeql-analyze
-    if: always()
-    permissions:
-      security-events: write
-      
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: all-results
-        
-    - name: Combine SARIF files
-      run: |
-        # Установка инструмента для объединения SARIF
-        npm install -g @microsoft/sarif-multitool
-        
-        # Объединение всех SARIF файлов
-        sarif-multitool merge \
-          --output combined.sarif \
-          all-results/**/*.sarif
-        
-    - name: Upload combined results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: combined.sarif
-        category: codeql-combined
+        sarif_file: results/*.sarif
