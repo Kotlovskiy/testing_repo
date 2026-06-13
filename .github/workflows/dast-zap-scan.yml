@@ -80,7 +80,7 @@ jobs:
           echo "Migrations completed"
           
       - name: Run OWASP ZAP API Scan
-        uses: zaproxy/action-api-scan@v0.16.0
+        uses: zaproxy/action-api-scan@v0.10.0
         with:
           target: 'http://localhost:5122'
           api_url: 'http://localhost:5122/swagger/v1/swagger.json'
