@@ -50,11 +50,16 @@ jobs:
           docker build -t backend-api:test \
             --build-arg ASPNETCORE_ENVIRONMENT=Testing \
             -f Dockerfile .
+
+      - name: Create shared network
+        run: |
+          docker network create dast-network || true
           
       - name: Run backend container
         run: |
           docker run -d \
             --name backend-api \
+            --network dast-network \
             -p 5122:5122 \
             --link postgres-dast:postgres-dast \
             -e ASPNETCORE_ENVIRONMENT=Development \
@@ -70,7 +75,7 @@ jobs:
       - name: Run database migrations
         run: |
           docker run --rm \
-            --network container:backend-api \
+            --network dast-network \
             -v $(pwd):/src \
             -w /src/RecipeBook \
             mcr.microsoft.com/dotnet/sdk:8.0 \
@@ -79,21 +84,18 @@ jobs:
           
       - name: Download OpenAPI spec
         run: |
-          # Download OpenAPI spec from running container
           curl -o openapi.json http://localhost:5122/swagger/v1/swagger.json
           echo "OpenAPI spec downloaded"
           
-      - name: Run OWASP ZAP API Scan
-        uses: zaproxy/action-api-scan@v0.10.0
-        with:
-          target: './openapi.json'  # Use local file instead of URL
-          format: 'openapi'
-          cmd_options: '-a -T 30'
-          
-      - name: Convert ZAP Results to SARIF
+      - name: Run OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.13.0
         with:
+          target: 'http://localhost:5122'
+          cmd_options: '-a -T 60 -j -r report.html -w report.md -J report.json'
           token: ${{ secrets.GITHUB_TOKEN }}
+          issue_title: "ZAP Full Scan Results - ${{ github.ref_name }}"
+          fail_action: false
+          allow_issue_writing: true
           
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -115,3 +117,4 @@ jobs:
         run: |
           docker stop backend-api postgres-dast || true
           docker rm backend-api postgres-dast || true
+          docker network rm dast-network || true
