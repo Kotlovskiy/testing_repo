@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Welcome, <span id="username-span"></span></h1>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let userName = urlParams.get('name'); 
+
+        document.getElementById('username-span').innerHTML = userName;
+    </script>
+</body>
+</html>
