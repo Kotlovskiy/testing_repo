@@ -115,11 +115,11 @@ jobs:
             -w report.md
             -J report.json
             -d
-            -z "-config api.file=/zap/wrk/openapi.json -config api.importFile=/zap/wrk/openapi.json"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue_title: "ZAP Full Scan Results - ${{ github.ref_name }}"
-          fail_action: false
-          allow_issue_writing: true
+            -z "-config api.file=/zap/wrk/openapi.json 
+                 -config api.importFile=/zap/wrk/openapi.json
+                 -config api.importUrl=/zap/wrk/openapi.json"
+            -m 5
+            -n /zap/wrk/openapi.json
           
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
