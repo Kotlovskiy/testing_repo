@@ -69,12 +69,14 @@ jobs:
           
       - name: Run database migrations
         run: |
-          # Устанавливаем dotnet ef если его нет
-          docker exec backend-api dotnet tool install --global dotnet-ef || true
-          
-          # Применяем миграции
-          docker exec backend-api /root/.dotnet/tools/dotnet-ef database update --no-build
-          
+          # Запускаем временный контейнер с .NET SDK для выполнения миграций
+          docker run --rm \
+            --network container:backend-api \
+            -v $(pwd):/src \
+            -w /src \
+            mcr.microsoft.com/dotnet/sdk:8.0 \
+            dotnet ef database update \
+            --connection "Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1"
           echo "Migrations completed"
           
       - name: Run OWASP ZAP API Scan
