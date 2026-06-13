@@ -75,8 +75,7 @@ jobs:
             -v $(pwd):/src \
             -w /src \
             mcr.microsoft.com/dotnet/sdk:8.0 \
-            dotnet ef database update \
-            --connection "Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1"
+            /bin/bash -c "dotnet tool install --global dotnet-ef && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --connection \"Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1\""
           echo "Migrations completed"
           
       - name: Run OWASP ZAP API Scan
