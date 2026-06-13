@@ -44,7 +44,7 @@ jobs:
             echo "Attempt $i/30 - Waiting for PostgreSQL..."
             sleep 2
           done
-
+          
       - name: Build backend Docker image
         run: |
           cd back
@@ -52,13 +52,13 @@ jobs:
             --build-arg ASPNETCORE_ENVIRONMENT=Testing \
             -f Dockerfile .
           cd ..
-
+          
       - name: Run backend container
         run: |
           docker run -d \
             --name backend-api \
             -p 5122:5122 \
-            --link postgres-dast:localhost \
+            --link postgres-dast:postgres-dast \
             -e ASPNETCORE_ENVIRONMENT=Development \
             -e ASPNETCORE_URLS=http://+:5122 \
             -e ConnectionStrings__DefaultConnection="Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1" \
@@ -68,7 +68,7 @@ jobs:
           for i in {1..5}; do
             sleep 3
           done
-
+          
       - name: Run database migrations
         run: |
           # Устанавливаем dotnet ef если его нет
@@ -78,28 +78,25 @@ jobs:
           docker exec backend-api /root/.dotnet/tools/dotnet-ef database update --no-build
           
           echo "Migrations completed"
-
+          
       - name: Run OWASP ZAP API Scan
-        uses: zaproxy/action-api-scan@v0.13.0
+        uses: zaproxy/action-api-scan@v0.16.0
         with:
           target: 'http://localhost:5122'
           api_url: 'http://localhost:5122/swagger/v1/swagger.json'
           cmd_options: '-a -t 30'
           
-      # Шаг 6: Конвертируем результаты в SARIF
       - name: Convert ZAP Results to SARIF
-        uses: SvanBoxel/zaproxy-to-ghas@v1.3.1
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
-          zap_report_path: 'report.json'
-
-      # Шаг 7: Загружаем SARIF в GitHub Security
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Upload SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: results.sarif
           
-      # Шаг 8: Сохраняем отчеты
       - name: Upload ZAP Reports as Artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -108,8 +105,7 @@ jobs:
           path: |
             *.html
             report.json
-
-      # Шаг 9: Очистка
+            
       - name: Cleanup containers
         if: always()
         run: |
