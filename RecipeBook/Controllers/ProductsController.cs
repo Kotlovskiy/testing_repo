@@ -80,6 +80,8 @@ namespace RecipeBook.Controllers
         }
 
         [HttpGet("vulnerable-simple")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
         public IActionResult VulnerableSimple([FromQuery] string cmd)
         {
             System.Diagnostics.Process.Start("cmd.exe", "/C " + cmd);
