@@ -34,14 +34,14 @@ jobs:
       - name: Run Semgrep and generate SARIF
         run: |
           semgrep scan \
-            --config p/default \
-            --config p/security-audit \
-            --config p/csharp \
-            --config p/owasp-top-ten \
-            --config p/cwe-top-25 \
-            --config p/trailofbits \
-            --config p/javascript \
-            --config p/typescript \
+            --config=p/default \
+            --config=p/security-audit \
+            --config=p/csharp \
+            --config=p/owasp-top-ten \
+            --config=p/cwe-top-25 \
+            --config=p/trailofbits \
+            --config=p/javascript \
+            --config=p/typescript \
             --config=p/secrets \
             --sarif \
             --output semgrep.sarif \
