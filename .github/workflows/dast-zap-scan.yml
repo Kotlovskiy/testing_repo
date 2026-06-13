@@ -77,12 +77,18 @@ jobs:
             sh -c "dotnet tool install --global dotnet-ef --version 8.0.0 && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --connection 'Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1' --project RecipeBook.csproj"
           echo "Migrations completed"
           
+      - name: Download OpenAPI spec
+        run: |
+          # Download OpenAPI spec from running container
+          curl -o openapi.json http://localhost:5122/swagger/v1/swagger.json
+          echo "OpenAPI spec downloaded"
+          
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.10.0
         with:
-          target: 'http://localhost:5122'
-          api_url: 'http://localhost:5122/swagger/v1/swagger.json'
-          cmd_options: '-a -t 30'
+          target: './openapi.json'  # Use local file instead of URL
+          format: 'openapi'
+          cmd_options: '-a -T 30'
           
       - name: Convert ZAP Results to SARIF
         uses: zaproxy/action-full-scan@v0.13.0
