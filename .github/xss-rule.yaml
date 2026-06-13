@@ -1,0 +1,7 @@
+rules:
+- id: xss-innerhtml-from-params
+  languages: [generic]
+  path: ["*.js", "*.html", "*.ts"]
+  pattern-regex: 'URLSearchParams.*\.get\(.*\).*innerHTML\s*='
+  severity: WARNING
+  message: "Possible XSS via URLSearchParams -> innerHTML"
