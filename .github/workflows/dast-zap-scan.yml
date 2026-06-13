@@ -91,12 +91,13 @@ jobs:
       - name: Create ZAP API config
         run: |
           cat > zap-api-config.conf << EOF
-          api.file	/zap/wrk/openapi.json	true
-          api.importFile	/zap/wrk/openapi.json	true
-          spider.maxDuration	5		
-          spider.maxDepth	5		
+          api.file	/zap/wrk/openapi.json	INFO
+          api.importFile	/zap/wrk/openapi.json	INFO
+          spider.maxDuration	5
+          spider.maxDepth	5
+          automation.spider.maxDuration	5
+          automation.spider.maxDepth	5
           EOF
-          # Проверяем, что файлы созданы
           echo "Created config file:"
           cat zap-api-config.conf
           echo "OpenAPI spec exists:"
