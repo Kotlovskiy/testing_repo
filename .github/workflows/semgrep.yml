@@ -1,0 +1,59 @@
+name: Semgrep SAST
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to scan'
+        required: true
+        default: 'back'
+        type: choice
+        options:
+          - front
+          - back
+          - ci-cd
+  pull_request: {}
+  push:
+    branches: ["front", "back"]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+      
+      - name: Install Semgrep
+        run: pip install semgrep
+      
+      - name: Run Semgrep and generate SARIF
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/csharp \
+            --config p/owasp-top-ten \
+            --config p/cwe-top-25 \
+            --config p/trailofbits \
+            --config p/javascript \
+            --config p/typescript \
+            --sarif \
+            --output semgrep.sarif \
+            .
+      
+      - name: Upload SARIF as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-results-${{ github.ref_name }}
+          path: semgrep.sarif
+          
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
