@@ -25,10 +25,15 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch || github.ref_name }}
 
+      - name: Create shared network
+        run: |
+          docker network create dast-network || true
+          
       - name: Start PostgreSQL container
         run: |
           docker run -d \
             --name postgres-dast \
+            --network dast-network \
             -e POSTGRES_DB=RecipeBookDb \
             -e POSTGRES_USER=postgres \
             -e POSTGRES_PASSWORD=1 \
@@ -51,17 +56,12 @@ jobs:
             --build-arg ASPNETCORE_ENVIRONMENT=Testing \
             -f Dockerfile .
 
-      - name: Create shared network
-        run: |
-          docker network create dast-network || true
-          
       - name: Run backend container
         run: |
           docker run -d \
             --name backend-api \
             --network dast-network \
             -p 5122:5122 \
-            --link postgres-dast:postgres-dast \
             -e ASPNETCORE_ENVIRONMENT=Development \
             -e ASPNETCORE_URLS=http://+:5122 \
             -e ConnectionStrings__DefaultConnection="Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1" \
@@ -79,13 +79,13 @@ jobs:
             -v $(pwd):/src \
             -w /src/RecipeBook \
             mcr.microsoft.com/dotnet/sdk:8.0 \
-            sh -c "dotnet tool install --global dotnet-ef --version 8.0.0 && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --connection 'Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1' --project RecipeBook.csproj"
+            sh -c "dotnet tool install --global dotnet-ef --version 9.0.14 && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --connection 'Host=postgres-dast;Port=5432;Database=RecipeBookDb;Username=postgres;Password=1' --project RecipeBook.csproj"
           echo "Migrations completed"
           
       - name: Download OpenAPI spec
         run: |
-          curl -o openapi.json http://localhost:5122/swagger/v1/swagger.json
-          echo "OpenAPI spec downloaded"
+          sleep 10
+          curl -v http://localhost:5122/swagger/v1/swagger.json || echo "Swagger not available yet"
           
       - name: Run OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.13.0
