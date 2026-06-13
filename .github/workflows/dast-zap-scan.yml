@@ -87,12 +87,25 @@ jobs:
           sleep 10
           curl -o openapi.json http://localhost:5122/swagger/v1/swagger.json
           echo "OpenAPI spec downloaded"
+
+      - name: Create ZAP API config
+        run: |
+          cat > zap-api-config.conf << EOF
+          api.file=/zap/wrk/openapi.json
+          api.importFile=/zap/wrk/openapi.json
+          spider.maxDuration=5
+          spider.maxDepth=5
+          EOF
+          # Проверяем, что файлы созданы
+          echo "Created config file:"
+          cat zap-api-config.conf
+          echo "OpenAPI spec exists:"
+          ls -la openapi.json
       
       - name: Run OWASP ZAP Full Scan with API context
         uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: 'http://localhost:5122'
-          api_import_file: '/github/workspace/openapi.json'
           cmd_options: >
             -a
             -T 60
@@ -100,8 +113,7 @@ jobs:
             -r report.html
             -w report.md
             -J report.json
-            -config "spider.maxDuration=5"
-            -config "spider.maxDepth=5"
+            -c zap-api-config.conf
           token: ${{ secrets.GITHUB_TOKEN }}
           issue_title: "ZAP Full Scan Results - ${{ github.ref_name }}"
           fail_action: false
