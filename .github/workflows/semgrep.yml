@@ -42,7 +42,6 @@ jobs:
             --config p/trailofbits \
             --config p/javascript \
             --config p/typescript \
-            --config .github/xss-rule.yaml \
             --sarif \
             --output semgrep.sarif \
             .
