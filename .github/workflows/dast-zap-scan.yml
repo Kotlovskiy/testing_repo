@@ -114,7 +114,8 @@ jobs:
             -r report.html
             -w report.md
             -J report.json
-            -c zap-api-config.conf
+            -d
+            -z "-config api.file=/zap/wrk/openapi.json -config api.importFile=/zap/wrk/openapi.json"
           token: ${{ secrets.GITHUB_TOKEN }}
           issue_title: "ZAP Full Scan Results - ${{ github.ref_name }}"
           fail_action: false
