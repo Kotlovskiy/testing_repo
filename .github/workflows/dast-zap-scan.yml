@@ -47,11 +47,9 @@ jobs:
           
       - name: Build backend Docker image
         run: |
-          cd back
           docker build -t backend-api:test \
             --build-arg ASPNETCORE_ENVIRONMENT=Testing \
             -f Dockerfile .
-          cd ..
           
       - name: Run backend container
         run: |
