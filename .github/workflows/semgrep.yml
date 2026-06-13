@@ -34,7 +34,7 @@ jobs:
       - name: Run Semgrep and generate SARIF
         run: |
           semgrep scan \
-            --config p/default
+            --config p/default \
             --config p/security-audit \
             --config p/csharp \
             --config p/owasp-top-ten \
